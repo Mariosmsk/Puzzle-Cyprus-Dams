@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta charset="UTF-8" />
+	<title>Πάζλ με τα Φράγματα της Κύπρου</title>
+	<link href="css/default.css" rel="stylesheet" />
+
+	<script src="https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyCEGyjuooYjuln48lJh_fdpq4kUudH-BF4&libraries=geometry"></script>
+	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="js/google.maps.Polygon.getBounds.js"></script>
+	<script src="js/google.maps.Polygon.moveTo.js"></script>
+	<script src="js/google.maps.LatLngBounds.expand.js"></script>
+	<script src="js/google.maps.LatLngBounds.containsPath.js"></script>
+	<script>
+	/**
+	 * Modified from Marios Kyriakou 2020 KIOS Research Center of Excelence
+	 */
+		 
+		/**
+		 * Get X random number beneath an upper limit
+		 * @param  {int} numItems The number of numbers you want generated
+		 * @param  {int} max	  The max value a number may be
+		 * @return {array}		  The array with numbers
+		 */
+		var getXRandomNumbersBeneathMax = function(numItems, max) {
+			var toReturn = [];
+			while(toReturn.length < numItems){
+				var randomnumber = Math.ceil(Math.random() * max)
+				var found = false;
+				for(var i = 0, l = toReturn.length; i < l; i++){
+					if(toReturn[i] == randomnumber) {
+						found = true;
+						break;
+					}
+				}
+				if(!found) {
+					toReturn.push(randomnumber);
+				}
+			}
+			return toReturn;
+		};
+
+
+		/**
+		 * Convert a set of GeoJSON coordinates to an set of coordinates usable in Google Maps
+		 * @param  {string} geometryType  The Geometry Type. Polygon or MultiPolygon
+		 * @param  {json} geoJSONCoords The coordindates in GeoJSON format
+		 * @return {array}			   The coordinates in a format usable by Google Maps
+		 */
+		var geoJSONCoords2GMapsCoords = function(geometryType, geoJSONCoords) {
+			var paths = [];
+			$.each(geoJSONCoords, function (k, coords) {
+				var shapeCoords = [];
+				var coords = (geometryType == 'Polygon') ? coords : coords[0];
+				$.each(coords, function(j, coord) {
+					!isNaN(coord[0]) && !isNaN(coord[1]) && shapeCoords.push(new google.maps.LatLng(coord[1], coord[0]));
+				});
+				paths.push(shapeCoords);
+			});
+			return paths;
+		}
+
+
+		/**
+		 * Thunderbirds are go!
+		 */
+		window.addEventListener('load', function(e) {
+
+			// Our map
+			var map = new google.maps.Map(document.getElementById('map_canvas'), {
+				zoom: 2,
+				minZoom: 9,
+				maxZoom: 18,
+				disableDoubleClickZoom: true,
+				scrollwheel: true,
+				center: new google.maps.LatLng(35.1, 33.5),
+				mapTypeId: google.maps.MapTypeId.TERRAIN
+			});
+
+			// Load in all dams
+			$.ajax({
+				url : 'data/dams.geo.json',
+				dataFormat : 'json'
+			}).success(function(data){
+
+				// Get 10 random indexes. We'll show these 10 on screen.
+				var countriesToShow = getXRandomNumbersBeneathMax(data.features.length, data.features.length);
+				var totalScore = 0;
+
+				$.each(data.features, function(i, item) {
+
+					// Create a polygon of our country
+					var poly = new google.maps.Polygon({
+						paths: geoJSONCoords2GMapsCoords(item.geometry.type, item.geometry.coordinates),
+						strokeColor: '#FF0000',
+						strokeOpacity: 1,
+						strokeWeight: 1,
+						fillColor: '#FF0000',
+						fillOpacity: 0.6,
+						countryCode: item.id,
+						countryNum: i,
+						countryName: item.properties.name,
+						countryPaths: geoJSONCoords2GMapsCoords(item.geometry.type, item.geometry.coordinates), // I know, we recalc this here but that's because we want a copy/clone of the paths
+						draggable: true,
+						geodesic: true,
+						zIndex: 2
+					});
+
+					// define the targetBounds in which the shape should end up being placed in
+					var targetBounds = poly.getBounds().expand(((google.maps.geometry.spherical.computeArea(poly.getPath())/1000000000 < 20) ? 10 : 5));
+
+					// Move the polygon to some random place on the map
+					poly.moveTo(new google.maps.LatLng(34.8+Math.random() * (0.1 - 0.05) + 0.05, 32.9+Math.random() * (0.1 - 0.05) + 0.05)).setMap(map);
+
+					// Show the polygon on the map
+					poly.setMap(map);
+
+					// When we've dragged around our polygon(s), check if it's aligned correctly
+					google.maps.event.addListener(poly, 'dblclick', function(e) {
+						if (this.draggable) placeCountry(this, false);
+					});
+					google.maps.event.addListener(poly, 'dragend', function(e) {
+						if (targetBounds.containsPath(this.getPaths())) {
+							placeCountry(this, true);
+						}
+					});
+
+					var placeCountry = function(poly, incrementScore) {
+
+						// Update the poly
+						var color = (incrementScore) ? '#00FF00' : '#0000FF';
+						poly.setOptions({
+							paths: poly.countryPaths,
+							strokeColor: color,
+							fillColor: color,
+							draggable: false,
+							zIndex: 1
+						});
+
+						// Give feedback to the user
+						if (!incrementScore) {
+							var message = 'Λάθος, αυτό ήταν το φράγμα ' + poly.countryName + '.';
+						} else {
+							var message = 'Ωραία! Αυτό είναι το φράγμα ' + poly.countryName + ' πράγματι!!';
+							totalScore++;
+						}
+
+						// Adjust countriesToShow + end game if needed
+						countriesToShow.splice(countriesToShow.indexOf(poly.countryNum), 1);
+						if (countriesToShow.length == 0) {
+							message += ' | Το παιχνίδι τελείωσε! Κάντε refresh για να ξαναρχίσει το παιχνίδι!';
+						}
+
+						$('#message').html(message);
+						$('#score').html(totalScore + '/25');
+
+					}
+
+				});
+
+			});
+
+		});
+	</script>
+</head>
+<body>
+	<div id="map_canvas"></div>
+	<div id="quiz">
+		<div id="header"><img src="data/interreg.png" alt="SmartWater2020" class="expand3">
+		<img src="https://www.smartwater2020.eu/wp-content/uploads/2018/08/Water-Development-Department-logo-e1534252263671-300x73.jpg"  class="expand2"></div>
+		<div id="footer"><img src="data/ucy.png" class="expand">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<img src="data/kios.png" class="expand"></div>
+		<p><strong><font size="4">Πάζλ με τα Φράγματα της Κύπρου!</font></p>
+		<p id="message"><font size="2">Πιο κάτω με κόκκινο χρώμα θα βρείτε 25 από τα φράγματα της Κύπρου. Στόχος σας είναι να σύρετε τα φράγματα<br>
+		στη σωστή τους θέση. Εάν δεν την γνωρίζετε, κάντε διπλό κλικ και αφήστε τον υπολογιστή να το τοποθετήσει.<br>
+		Κάντε refresh για να ξαναρχίσει το παιχνίδι.<br>Πηγές: <a href="https://www.data.gov.cy/">Open Data Cyprus</a> | <a href="http://www.moa.gov.cy/moa/wdd/Wdd.nsf/index_gr/index_gr?opendocument">Τμήμα υδάτων</a> | <a href="http://www.bram.us/"> http://www.bram.us/</a></p>
+		<span id="score">0/25</span></font></strong>
+	</div>
+
+</body>
+</html>
