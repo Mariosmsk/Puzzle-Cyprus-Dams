@@ -14,7 +14,7 @@ html, body {
 	left: 0;
 	right: 0;
 	top: 7em;
-	background-color: lightblue;
+	background-color: white;
 }
 
 #quiz {
@@ -27,7 +27,7 @@ html, body {
 	text-align: center;
 	border-bottom: 1px solid #333;
 	box-sizing: border-box;
-	background-color: lightblue;
+	background-color: white;
 }
 
 p {
@@ -52,11 +52,11 @@ a, a:visited {
 	text-decoration: none;
 }
 
-img.expand { width: 8em; }
+img.expand { width: 8em; text-align: center;}
 
-img.expand3 { width: 6.5em; }
+img.expand3 { width: 11em; text-align: center;}
 
-img.expand2 { width: 12.7em; }
+img.expand2 { width: 15.7em; text-align: center;}
 
 #footer {
   position: absolute;
@@ -66,6 +66,12 @@ img.expand2 { width: 12.7em; }
 
 #header {
   position: absolute;
-  left: 5px;
-  top: 5px;
+  left: 15px;
+  top: 8px;
+}
+
+#header2 {
+  position: absolute;
+  left: 76%;
+  top: 8px;
 }
