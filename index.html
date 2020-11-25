@@ -111,7 +111,7 @@
 					var targetBounds = poly.getBounds().expand(((google.maps.geometry.spherical.computeArea(poly.getPath())/1000000000 < 20) ? 10 : 5));
 
 					// Move the polygon to some random place on the map
-					poly.moveTo(new google.maps.LatLng(34.8+Math.random() * (0.1 - 0.05) + 0.05, 32.9+Math.random() * (0.1 - 0.05) + 0.05)).setMap(map);
+					poly.moveTo(new google.maps.LatLng(34.8+Math.random() * (0.1 - 0.5) + 0.4, 32.9+Math.random() * (0.1 - 0.5) + 0.5)).setMap(map);
 
 					// Show the polygon on the map
 					poly.setMap(map);
