@@ -72,6 +72,17 @@
 				zoom: 2,
 				minZoom: 9,
 				maxZoom: 18,
+				styles: [
+					  {
+						featureType: "all",
+						elementType: "labels",
+						stylers: [
+						  {
+							visibility: "off",
+						  },
+						],
+					  },
+					],
 				disableDoubleClickZoom: true,
 				scrollwheel: true,
 				center: new google.maps.LatLng(35.1, 33.5),
