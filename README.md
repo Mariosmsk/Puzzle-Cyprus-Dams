@@ -1,13 +1,10 @@
-# Puzzle game with Cyprus dams
+## Puzzle Game with Cyprus Dams
 
-This game created for the project SmartWater2020.
+### About the Game
+This puzzle game features the dams of Cyprus and is a part of the SmartWater2020 project. It's an interactive way to learn about and explore the geographical locations of various dams across Cyprus.
 
-https://smartwater2020.eu/puzzledamscy/
+### Play the Game
+You can access and play the game online at [Puzzle Game with Cyprus Dams](https://www.kios.ucy.ac.cy/water/puzzledamscy/)
 
-
-
-----------------------------------------------------------
-
-Reference: https://github.com/bramus/mercator-puzzle-redux
-
-----------------------------------------------------------
+### Reference
+This game was inspired by and based on the [Mercator Puzzle Redux](https://github.com/bramus/mercator-puzzle-redux) created by Bramus.
